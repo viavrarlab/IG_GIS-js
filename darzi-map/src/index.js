@@ -1,6 +1,9 @@
 import { Map, NavigationControl, GeolocateControl } from 'maplibre-gl';
+import { MaplibreTerradrawControl } from '@watergis/maplibre-gl-terradraw';
 
-async function main() {
+import { GlassShackGnomeTalk } from './protocol';
+
+function main() {
   // osm map
   const style = {
     version: 8,
@@ -44,6 +47,10 @@ async function main() {
     positionOptions: { enableHighAccuracy: true },
     trackUserLocation: true,
   }));
+  map.addControl(new MaplibreTerradrawControl({
+    modes: ['rectangle'],
+    open: true,
+  }));
   // coords
   const coordsElem = document.getElementById('coords');
   const center = map.getCenter().wrap();
@@ -52,6 +59,10 @@ async function main() {
     const lngLat = e.lngLat.wrap();
     coordsElem.innerHTML = `lon: ${lngLat.lng.toFixed(4)} lat: ${lngLat.lat.toFixed(4)}`;
   });
+  // protocol
+  const gsgt = new GlassShackGnomeTalk();
+  return gsgt;
 };
 
-main();
+const gsgt = main();
+gsgt.init();
