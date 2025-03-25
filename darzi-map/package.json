@@ -8,7 +8,9 @@
   "engines": {
     "node": ">=8.9.0"
   },
-  "dependencies": {},
+  "dependencies": {
+    "maplibre-gl": "^5.2.0"
+  },
   "scripts": {
     "parcel-start": "bash scripts/parcel-start.sh",
     "parcel-build": "bash scripts/parcel-build.sh",
