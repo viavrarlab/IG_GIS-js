@@ -4,6 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1.0,user-scalable=no">
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css" />
   <style>
     body,
     div {
@@ -17,12 +18,26 @@
     #map {
       height: 100%;
     }
+
+    #coords {
+      display: block;
+      position: absolute;
+      bottom: 5px;
+      left: 50%;
+      transform: translate(-50%);
+      padding: 5px;
+      font-size: 12px;
+      text-align: center;
+      color: #000;
+      background: #fff;
+    }
   </style>
 </head>
 
 <body>
   <div id="main">
     <div id="map"></div>
+    <pre id="coords"></pre>
   </div>
 </body>
 
