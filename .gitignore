@@ -1,6 +1,6 @@
 # generated
 
-.cache
+.parcel-cache
 .yarn
 dist
 node_modules
