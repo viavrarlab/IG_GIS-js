@@ -33,6 +33,15 @@
       color: #000;
       background: #fff;
     }
+
+    #layers {
+      display: block;
+      position: absolute;
+      bottom: 15px;
+      left: 15px;
+      padding: 5px;
+      font-size: 12px;
+    }
   </style>
   <script type="module" src="src/index.js"></script>
 </head>
@@ -41,6 +50,10 @@
   <div id="main">
     <div id="map"></div>
     <pre id="coords"></pre>
+    <select id="layers">
+      <option value="osm">OSM</option>
+      <option value="mapzen">Mapzen</option>
+    </select>
   </div>
 </body>
 
