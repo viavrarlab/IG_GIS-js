@@ -3613,6 +3613,7 @@ __metadata:
     cross-env: "npm:^7.0.3"
     eslint: "npm:^9.23.0"
     eslint-config-google: "npm:^0.14.0"
+    maplibre-contour: "npm:^0.1.0"
     maplibre-gl: "npm:^5.2.0"
     parcel: "npm:^2.14.2"
     parcel-reporter-static-files-copy: "npm:^1.5.3"
@@ -4905,6 +4906,13 @@ __metadata:
     promise-retry: "npm:^2.0.1"
     ssri: "npm:^12.0.0"
   checksum: 10c0/c40efb5e5296e7feb8e37155bde8eb70bc57d731b1f7d90e35a092fde403d7697c56fb49334d92d330d6f1ca29a98142036d6480a12681133a0a1453164cb2f0
+  languageName: node
+  linkType: hard
+
+"maplibre-contour@npm:^0.1.0":
+  version: 0.1.0
+  resolution: "maplibre-contour@npm:0.1.0"
+  checksum: 10c0/f72254a69adfae85c9dc25e8f9487ee99413862d129d0fe926cffd9cedf73d7c453ffebfc2259f9afa4e0d9f00c4c10571bf60abd84a94b4bdba9285a4da597b
   languageName: node
   linkType: hard
 
