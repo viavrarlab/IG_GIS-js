@@ -66,6 +66,7 @@ const styleContour = {
       type: 'raster-dem',
       tiles: [demMapzen.sharedDemProtocolUrl],
       tileSize: 256,
+      attribution: '&copy; Mapzen',
       maxzoom: 15,
     },
     contours: {

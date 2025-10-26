@@ -6,7 +6,7 @@ TODO
 
 ```bash
 cd darzi-map
-rm -rf .cache .yarn dist node_modules
+rm -rf .parcel-cache .yarn dist node_modules
 yarn
 yarn parcel-start
 ```
