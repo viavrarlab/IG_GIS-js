@@ -1,11 +1,11 @@
 export class GlassShackGnomeTalk {
-    constructor() { this._init = false; }
+    constructor() { }
 
     _send(msg) { console.log(`GSGT: ${msg}`); }
 
-    init() {
-        if (this._init) return;
-        this._init = true;
-        this._send('init');
-    }
+    preInit() { this._send('preInit'); }
+
+    init() { this._send('init'); }
+
+    layer(layer) { this._send(`layer ${layer}`); }
 }

@@ -7,7 +7,33 @@ import { GlassShackGnomeTalk } from './protocol';
 
 
 
-// map
+// config
+const configTileSize = 256;
+const configMaxzoom = 19;
+const configMaxzoomMapzen = 15;
+
+
+
+// terrain
+const demMapzen = new mlcontour.DemSource({
+  url: 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png',
+  encoding: 'terrarium',
+  maxzoom: configMaxzoomMapzen,
+  worker: true,
+  cacheSize: 1000,
+});
+demMapzen.setupMaplibre(maplibregl);
+const sourceDEM = {
+  type: 'raster-dem',
+  tiles: [demMapzen.sharedDemProtocolUrl],
+  tileSize: configTileSize,
+  attribution: '&copy; Mapzen',
+  maxzoom: configMaxzoomMapzen,
+}
+
+
+
+// styles
 const styleOSM = {
   version: 8,
   sources: {
@@ -18,9 +44,9 @@ const styleOSM = {
         'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
         'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png',
       ],
-      tileSize: 256,
+      tileSize: configTileSize,
       attribution: '&copy; OpenStreetMap Contributors',
-      maxzoom: 19,
+      maxzoom: configMaxzoom,
     },
   },
   layers: [
@@ -37,9 +63,9 @@ const styleMapzen = {
     mapzen: {
       type: 'raster',
       tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
-      tileSize: 256,
+      tileSize: configTileSize,
       attribution: '&copy; Mapzen',
-      maxzoom: 15,
+      maxzoom: configMaxzoomMapzen,
     },
   },
   layers: [
@@ -50,25 +76,11 @@ const styleMapzen = {
     },
   ],
 };
-const demMapzen = new mlcontour.DemSource({
-  url: 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png',
-  encoding: 'terrarium',
-  maxzoom: 15,
-  worker: true,
-  cacheSize: 1000,
-});
-demMapzen.setupMaplibre(maplibregl);
 const styleContour = {
   version: 8,
   glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
   sources: {
-    hillshade: {
-      type: 'raster-dem',
-      tiles: [demMapzen.sharedDemProtocolUrl],
-      tileSize: 256,
-      attribution: '&copy; Mapzen',
-      maxzoom: 15,
-    },
+    dem: sourceDEM,
     contours: {
       type: 'vector',
       tiles: [demMapzen.contourProtocolUrl({
@@ -84,16 +96,16 @@ const styleContour = {
         levelKey: 'level',
         contourLayer: 'contours',
       })],
-      maxzoom: 15,
+      maxzoom: configMaxzoomMapzen,
     },
   },
   layers: [
     {
       id: 'hillshade',
       type: 'hillshade',
-      source: 'hillshade',
+      source: 'dem',
       layout: { visibility: 'visible' },
-      paint: { 'hillshade-exaggeration': 0.25 },
+      paint: { 'hillshade-exaggeration': 1 },
     },
     {
       id: 'contours',
@@ -124,25 +136,28 @@ const styleContour = {
     },
   ],
 };
-const map = new Map({
-  center: [25.4281, 57.5417],
-  container: 'map',
-  hash: true,
-  style: styleOSM,
-  maxZoom: 19,
-  zoom: 15,
-});
 
 
 
-// layers
-const layers = {
+// config
+const configStyles = {
   osm: styleOSM,
   mapzen: styleMapzen,
   contour: styleContour,
 };
-const layersElem = document.getElementById('layers');
-layersElem.addEventListener('change', e => map.setStyle(layers[e.target.value]));
+const configDefaultStyle = 'osm';
+
+
+
+// map
+const map = new Map({
+  center: [25.4281, 57.5417],
+  container: 'map',
+  hash: true,
+  style: configStyles[configDefaultStyle],
+  maxZoom: configMaxzoom,
+  zoom: configMaxzoomMapzen,
+});
 
 
 
@@ -177,11 +192,29 @@ map.on('mousemove', e => {
 
 
 // protocol
-window.gsgt = new GlassShackGnomeTalk();
-const terradraw = terradrawControl.getTerraDrawInstance();
-terradraw.on('finish', id => {
+function _terradrawFinish(id, terradraw) {
   const feature = terradraw.getSnapshotFeature(id);
   console.log(feature);
+  console.log(map.terrain);
   // TODO
-});
+}
+function _terradrawInit(layer) {
+  const terradraw = terradrawControl.getTerraDrawInstance();
+  terradraw.on('finish', id => _terradrawFinish(id, terradraw));
+  window.gsgt.layer(layer);
+}
+window.gsgt = new GlassShackGnomeTalk();
+window.gsgt.preInit();
+_terradrawInit(configDefaultStyle);
 window.gsgt.init();
+
+
+
+// layers
+const layersElem = document.getElementById('layers');
+layersElem.addEventListener('change', e => {
+  map.removeControl(terradrawControl)
+  map.setStyle(configStyles[e.target.value]);
+  map.addControl(terradrawControl, 'top-left');
+  _terradrawInit(e.target.value);
+});
