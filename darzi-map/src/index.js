@@ -1,5 +1,5 @@
 import maplibregl from 'maplibre-gl';
-import { Map, NavigationControl, GeolocateControl } from 'maplibre-gl';
+import { Map, NavigationControl, GeolocateControl, GlobeControl, TerrainControl, LngLat } from 'maplibre-gl';
 import mlcontour from 'maplibre-contour';
 import { MaplibreTerradrawControl } from '@watergis/maplibre-gl-terradraw';
 
@@ -11,6 +11,7 @@ import { GlassShackGnomeTalk } from './protocol';
 const configTileSize = 256;
 const configMaxzoom = 19;
 const configMaxzoomMapzen = 15;
+const configOrigin = new LngLat(25.4281, 57.5417);
 
 
 
@@ -25,10 +26,15 @@ const demMapzen = new mlcontour.DemSource({
 demMapzen.setupMaplibre(maplibregl);
 const sourceDEM = {
   type: 'raster-dem',
+  encoding: 'terrarium',
   tiles: [demMapzen.sharedDemProtocolUrl],
   tileSize: configTileSize,
   attribution: '&copy; Mapzen',
   maxzoom: configMaxzoomMapzen,
+}
+const terrainDEM = {
+  source: 'dem',
+  exaggeration: 1,
 }
 
 
@@ -36,7 +42,9 @@ const sourceDEM = {
 // styles
 const styleOSM = {
   version: 8,
+  terrain: terrainDEM,
   sources: {
+    dem: sourceDEM,
     osm: {
       type: 'raster',
       tiles: [
@@ -59,7 +67,9 @@ const styleOSM = {
 };
 const styleMapzen = {
   version: 8,
+  terrain: terrainDEM,
   sources: {
+    dem: sourceDEM,
     mapzen: {
       type: 'raster',
       tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
@@ -79,6 +89,7 @@ const styleMapzen = {
 const styleContour = {
   version: 8,
   glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
+  terrain: terrainDEM,
   sources: {
     dem: sourceDEM,
     contours: {
@@ -101,11 +112,22 @@ const styleContour = {
   },
   layers: [
     {
+      id: 'background',
+      type: 'background',
+      paint: {
+        'background-color': '#fff',
+        'background-opacity': 1,
+      },
+    },
+    {
       id: 'hillshade',
       type: 'hillshade',
       source: 'dem',
       layout: { visibility: 'visible' },
-      paint: { 'hillshade-exaggeration': 1 },
+      paint: {
+        'hillshade-exaggeration': 1,
+        'hillshade-method': 'igor',
+      },
     },
     {
       id: 'contours',
@@ -151,7 +173,7 @@ const configDefaultStyle = 'osm';
 
 // map
 const map = new Map({
-  center: [25.4281, 57.5417],
+  center: configOrigin,
   container: 'map',
   hash: true,
   style: configStyles[configDefaultStyle],
@@ -172,6 +194,8 @@ map.addControl(new GeolocateControl({
   positionOptions: { enableHighAccuracy: true },
   trackUserLocation: true,
 }));
+map.addControl(new GlobeControl());
+map.addControl(new TerrainControl(terrainDEM));
 const terradrawControl = new MaplibreTerradrawControl({
   modes: ['rectangle', 'select', 'delete-selection', 'delete'],
   open: true,
@@ -196,6 +220,7 @@ function _terradrawFinish(id, terradraw) {
   const feature = terradraw.getSnapshotFeature(id);
   console.log(feature);
   console.log(map.terrain);
+  feature.geometry.coordinates[0].forEach(([lng, lat]) => console.log(lng, lat, map.terrain.getElevationForLngLatZoom(new LngLat(lng, lat), configMaxzoomMapzen)));
   // TODO
 }
 function _terradrawInit(layer) {
@@ -213,7 +238,7 @@ window.gsgt.init();
 // layers
 const layersElem = document.getElementById('layers');
 layersElem.addEventListener('change', e => {
-  map.removeControl(terradrawControl)
+  map.removeControl(terradrawControl);
   map.setStyle(configStyles[e.target.value]);
   map.addControl(terradrawControl, 'top-left');
   _terradrawInit(e.target.value);
