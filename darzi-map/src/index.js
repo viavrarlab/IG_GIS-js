@@ -1,5 +1,5 @@
 import maplibregl from 'maplibre-gl';
-import { Map, NavigationControl, GeolocateControl, GlobeControl, TerrainControl, LngLat } from 'maplibre-gl';
+import { Map, NavigationControl, GeolocateControl, GlobeControl, TerrainControl, LngLat, MercatorCoordinate } from 'maplibre-gl';
 import mlcontour from 'maplibre-contour';
 import { MaplibreTerradrawControl } from '@watergis/maplibre-gl-terradraw';
 
@@ -9,8 +9,8 @@ import { GlassShackGnomeTalk } from './protocol';
 
 // config
 const configTileSize = 256;
-const configMaxzoom = 19;
-const configMaxzoomMapzen = 15;
+const configMaxZoom = 19;
+const configMaxZoomMapzen = 15;
 const configOrigin = new LngLat(25.4281, 57.5417);
 
 
@@ -19,7 +19,7 @@ const configOrigin = new LngLat(25.4281, 57.5417);
 const demMapzen = new mlcontour.DemSource({
   url: 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png',
   encoding: 'terrarium',
-  maxzoom: configMaxzoomMapzen,
+  maxzoom: configMaxZoomMapzen,
   worker: true,
   cacheSize: 1000,
 });
@@ -30,7 +30,7 @@ const sourceDEM = {
   tiles: [demMapzen.sharedDemProtocolUrl],
   tileSize: configTileSize,
   attribution: '&copy; Mapzen',
-  maxzoom: configMaxzoomMapzen,
+  maxzoom: configMaxZoomMapzen,
 }
 const terrainDEM = {
   source: 'dem',
@@ -54,7 +54,7 @@ const styleOSM = {
       ],
       tileSize: configTileSize,
       attribution: '&copy; OpenStreetMap Contributors',
-      maxzoom: configMaxzoom,
+      maxzoom: configMaxZoom,
     },
   },
   layers: [
@@ -75,7 +75,7 @@ const styleMapzen = {
       tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
       tileSize: configTileSize,
       attribution: '&copy; Mapzen',
-      maxzoom: configMaxzoomMapzen,
+      maxzoom: configMaxZoomMapzen,
     },
   },
   layers: [
@@ -107,7 +107,7 @@ const styleContour = {
         levelKey: 'level',
         contourLayer: 'contours',
       })],
-      maxzoom: configMaxzoomMapzen,
+      maxzoom: configMaxZoomMapzen,
     },
   },
   layers: [
@@ -177,8 +177,8 @@ const map = new Map({
   container: 'map',
   hash: true,
   style: configStyles[configDefaultStyle],
-  maxZoom: configMaxzoom,
-  zoom: configMaxzoomMapzen,
+  maxZoom: configMaxZoom,
+  zoom: configMaxZoomMapzen,
 });
 
 
@@ -216,12 +216,48 @@ map.on('mousemove', e => {
 
 
 // protocol
+function _heightmap(coords) {
+  const lnglats = coords.map(([lng, lat]) => new LngLat(lng, lat));
+  const mercs = lnglats.map(lnglat => MercatorCoordinate.fromLngLat(lnglat, map.terrain.getElevationForLngLatZoom(lnglat, configMaxZoomMapzen)));
+  const xs = mercs.map(merc => merc.x);
+  const ys = mercs.map(merc => merc.y);
+  const meters = mercs.map(merc => merc.meterInMercatorCoordinateUnits());
+  const x_min = Math.min(...xs);
+  const x_max = Math.max(...xs);
+  const y_min = Math.min(...ys);
+  const y_max = Math.max(...ys);
+  const x_delta = x_max - x_min;
+  const y_delta = y_max - y_min;
+  const meters_avg = meters.reduce((a, b) => a + b) / meters.length;
+  const x_meters = x_delta / meters_avg;
+  const y_meters = y_delta / meters_avg;
+  const lngs = coords.map(([lng, _]) => lng);
+  const lats = coords.map(([_, lat]) => lat);
+  const lng_min = Math.min(...lngs);
+  const lng_max = Math.max(...lngs);
+  const lat_min = Math.min(...lats);
+  const lat_max = Math.max(...lats);
+  const lng_delta = lng_max - lng_min;
+  const lat_delta = lat_max - lat_min;
+  const lng_meter = lng_delta / x_meters;
+  const lat_meter = lat_delta / y_meters;
+  const x_index = [...Array(Math.ceil(x_meters)).keys()];
+  const y_index = [...Array(Math.ceil(y_meters)).keys()];
+  const eles = new Float32Array(x_index.length * y_index.length);
+  for (const x of x_index) {
+    for (const y of y_index) {
+      const lng = lng_min + x * lng_meter;
+      const lat = lat_min + y * lat_meter;
+      const ele = map.terrain.getElevationForLngLatZoom(new LngLat(lng, lat), configMaxZoomMapzen);
+      eles[x * y_index.length + y] = ele;
+    }
+  }
+  window.gsgt.heightmap(lng_min, lng_min + (x_index.length - 1) * lng_meter, lat_min, lat_min + (y_index.length - 1) * lat_meter, x_index.length, y_index.length, eles);
+}
 function _terradrawFinish(id, terradraw) {
   const feature = terradraw.getSnapshotFeature(id);
-  console.log(feature);
-  console.log(map.terrain);
-  feature.geometry.coordinates[0].forEach(([lng, lat]) => console.log(lng, lat, map.terrain.getElevationForLngLatZoom(new LngLat(lng, lat), configMaxzoomMapzen)));
-  // TODO
+  if (feature.properties.mode != 'rectangle') return;
+  _heightmap(feature.geometry.coordinates[0]);
 }
 function _terradrawInit(layer) {
   const terradraw = terradrawControl.getTerraDrawInstance();
@@ -243,3 +279,8 @@ layersElem.addEventListener('change', e => {
   map.addControl(terradrawControl, 'top-left');
   _terradrawInit(e.target.value);
 });
+
+
+
+// test
+map.on('load', () => _heightmap([[25.441246033, 57.537971414], [25.446557518390684, 57.53890670958709]]));
