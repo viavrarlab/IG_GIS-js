@@ -216,6 +216,7 @@ map.on('mousemove', e => {
 
 
 // protocol
+var _limit = 250000;
 function _heightmap(coords) {
   const lnglats = coords.map(([lng, lat]) => new LngLat(lng, lat));
   const mercs = lnglats.map(lnglat => MercatorCoordinate.fromLngLat(lnglat, map.terrain.getElevationForLngLatZoom(lnglat, configMaxZoomMapzen)));
@@ -243,7 +244,9 @@ function _heightmap(coords) {
   const lat_meter = lat_delta / y_meters;
   const x_index = [...Array(Math.ceil(x_meters)).keys()];
   const y_index = [...Array(Math.ceil(y_meters)).keys()];
-  const eles = new Float32Array(x_index.length * y_index.length);
+  const area = x_index.length * y_index.length;
+  if (area > _limit) return [false, area];
+  const eles = new Float32Array(area);
   for (const x of x_index) {
     for (const y of y_index) {
       const lng = lng_min + x * lng_meter;
@@ -253,11 +256,13 @@ function _heightmap(coords) {
     }
   }
   window.gsgt.heightmap(lng_min, lng_min + (x_index.length - 1) * lng_meter, lat_min, lat_min + (y_index.length - 1) * lat_meter, x_index.length, y_index.length, eles);
+  return [true, area];
 }
 function _terradrawFinish(id, terradraw) {
   const feature = terradraw.getSnapshotFeature(id);
   if (feature.properties.mode != 'rectangle') return;
-  _heightmap(feature.geometry.coordinates[0]);
+  const [ok, area] = _heightmap(feature.geometry.coordinates[0]);
+  if (!ok) alert(`Area too big, ${area} m2, must be under ${_limit} m2!`)
 }
 function _terradrawInit(layer) {
   const terradraw = terradrawControl.getTerraDrawInstance();
@@ -279,6 +284,21 @@ layersElem.addEventListener('change', e => {
   map.addControl(terradrawControl, 'top-left');
   _terradrawInit(e.target.value);
 });
+
+
+
+// exaggeration
+const exaggerationElem = document.getElementById('exaggeration');
+exaggerationElem.addEventListener('change', e => {
+  map.terrain.exaggeration = e.target.valueAsNumber;
+  map.redraw();
+});
+
+
+
+// limit
+const limitElem = document.getElementById('limit');
+limitElem.addEventListener('change', e => { _limit = e.target.valueAsNumber; });
 
 
 

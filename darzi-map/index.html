@@ -34,6 +34,24 @@
       background: #fff;
     }
 
+    #exaggeration {
+      display: block;
+      position: absolute;
+      bottom: 65px;
+      left: 15px;
+      padding: 5px;
+      font-size: 12px;
+    }
+
+    #limit {
+      display: block;
+      position: absolute;
+      bottom: 40px;
+      left: 15px;
+      padding: 5px;
+      font-size: 12px;
+    }
+
     #layers {
       display: block;
       position: absolute;
@@ -50,6 +68,8 @@
   <div id="main">
     <div id="map"></div>
     <pre id="coords"></pre>
+    <input id="exaggeration" type="range" min="0.5" max="10" step="0.1" value="1">
+    <input id="limit" type="range" min="0" max="250000" step="1000" value="250000">
     <select id="layers">
       <option value="osm">OSM</option>
       <option value="mapzen">Mapzen</option>
