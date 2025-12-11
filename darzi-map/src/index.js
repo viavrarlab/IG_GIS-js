@@ -245,7 +245,7 @@ function _heightmap(coords) {
   const x_index = [...Array(Math.ceil(x_meters)).keys()];
   const y_index = [...Array(Math.ceil(y_meters)).keys()];
   const area = x_index.length * y_index.length;
-  if (area > _limit) return [false, area];
+  if (area > _limit) return window.gsgt.error(`Area too big, ${area} m2, must be under ${_limit} m2!`);
   const eles = new Float32Array(area);
   for (const x of x_index) {
     for (const y of y_index) {
@@ -256,13 +256,12 @@ function _heightmap(coords) {
     }
   }
   window.gsgt.heightmap(lng_min, lng_min + (x_index.length - 1) * lng_meter, lat_min, lat_min + (y_index.length - 1) * lat_meter, x_index.length, y_index.length, eles);
-  return [true, area];
 }
 function _terradrawFinish(id, terradraw) {
   const feature = terradraw.getSnapshotFeature(id);
   if (feature.properties.mode != 'rectangle') return;
-  const [ok, area] = _heightmap(feature.geometry.coordinates[0]);
-  if (!ok) alert(`Area too big, ${area} m2, must be under ${_limit} m2!`)
+  const error = _heightmap(feature.geometry.coordinates[0]);
+  if (error) alert(error);
 }
 function _terradrawInit(layer) {
   const terradraw = terradrawControl.getTerraDrawInstance();
@@ -304,3 +303,4 @@ limitElem.addEventListener('change', e => { _limit = e.target.valueAsNumber; });
 
 // test
 map.on('load', () => _heightmap([[25.441246033, 57.537971414], [25.446557518390684, 57.53890670958709]]));
+// map.on('load', () => _heightmap([[25.438246033, 57.534971414], [25.446557518390684, 57.53890670958709]]));

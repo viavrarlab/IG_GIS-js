@@ -10,4 +10,6 @@ export class GlassShackGnomeTalk {
     layer(layer) { this._send(`layer ${layer}`); }
 
     heightmap(lng_min, lng_max, lat_min, lat_max, x, y, array) { this._send(`heightmap ${lng_min} ${lng_max} ${lat_min} ${lat_max} ${x} ${y} ${array.map(h => Math.round(h * 100)).join()}`); }
+
+    error(error) { this._send(`error ${error}`); return error; }
 }
