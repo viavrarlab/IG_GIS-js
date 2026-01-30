@@ -7,6 +7,11 @@ import { GlassShackGnomeTalk } from './protocol';
 
 
 
+// see https://github.com/sindresorhus/ky/issues/588#issuecomment-2256808504
+if (!AbortSignal.prototype.throwIfAborted) AbortSignal.prototype.throwIfAborted = function () { if (this.aborted) throw new Error('Signal aborted'); };
+
+
+
 // config
 const configTileSize = 256;
 const configMaxZoom = 19;
