@@ -222,7 +222,7 @@ map.on('mousemove', e => {
 
 // protocol
 var _limit = 250000;
-function _heightmap(coords) {
+function _area(coords) {
   const lnglats = coords.map(([lng, lat]) => new LngLat(lng, lat));
   const mercs = lnglats.map(lnglat => MercatorCoordinate.fromLngLat(lnglat, map.terrain.getElevationForLngLatZoom(lnglat, configMaxZoomMapzen)));
   const xs = mercs.map(merc => merc.x);
@@ -250,7 +250,16 @@ function _heightmap(coords) {
   const x_index = [...Array(Math.ceil(x_meters)).keys()];
   const y_index = [...Array(Math.ceil(y_meters)).keys()];
   const area = x_index.length * y_index.length;
-  if (area > _limit) return window.gsgt.error(`Area too big, ${area} m2, must be under ${_limit} m2!`);
+  return [lng_min, lat_min, lng_meter, lat_meter, x_index, y_index, area];
+}
+function _heightmap(coords, interactive = true) {
+  const [lng_min, lat_min, lng_meter, lat_meter, x_index, y_index, area] = _area(coords);
+  if (area > _limit) {
+    const error = window.gsgt.error(`Area too big, ${area} m2, must be under ${_limit} m2!`);
+    if (interactive) alert(error);
+    return error;
+  }
+  if (interactive && !confirm(`Are you sure you want to load ${area} m2 area?`)) return window.gsgt.error('User cancelled feature.');
   const eles = new Float32Array(area);
   for (const x of x_index) {
     for (const y of y_index) {
@@ -262,14 +271,38 @@ function _heightmap(coords) {
   }
   window.gsgt.heightmap(lng_min, lng_min + (x_index.length - 1) * lng_meter, lat_min, lat_min + (y_index.length - 1) * lat_meter, x_index.length, y_index.length, eles);
 }
+var _previousId;
 function _terradrawFinish(id, terradraw) {
   const feature = terradraw.getSnapshotFeature(id);
   if (feature.properties.mode != 'rectangle') return;
-  const error = _heightmap(feature.geometry.coordinates[0]);
-  if (error) alert(error);
+  if (_heightmap(feature.geometry.coordinates[0])) {
+    // see https://github.com/JamesLMilner/terra-draw/issues/304
+    requestAnimationFrame(() => terradraw.removeFeatures([id]));
+    return;
+  }
+  if (_previousId) terradraw.removeFeatures([_previousId]);
+  _previousId = id;
+}
+var _overLimitId;
+function _terradrawChange(id, type, terradraw) {
+  if (type != 'update') return;
+  const feature = terradraw.getSnapshotFeature(id);
+  if (feature.properties.mode != 'rectangle') return;
+  const area = _area(feature.geometry.coordinates[0]).at(-1);
+  _overLimitId = area > _limit ? id : undefined;
+}
+function _terradrawReady(terradraw) {
+  terradraw.updateModeOptions('rectangle', {
+    styles: {
+      fillColor: ({ id }) => id == _overLimitId ? '#FF0000' : '#3f97e0',
+      outlineColor: ({ id }) => id == _overLimitId ? '#FF0000' : '#3f97e0',
+    }
+  });
 }
 function _terradrawInit(layer) {
   const terradraw = terradrawControl.getTerraDrawInstance();
+  terradraw.on('ready', () => _terradrawReady(terradraw));
+  terradraw.on('change', (id, type) => _terradrawChange(id, type, terradraw));
   terradraw.on('finish', id => _terradrawFinish(id, terradraw));
   window.gsgt.layer(layer);
 }
@@ -307,5 +340,5 @@ limitElem.addEventListener('change', e => { _limit = e.target.valueAsNumber; });
 
 
 // test
-map.on('load', () => _heightmap([[25.441246033, 57.537971414], [25.446557518390684, 57.53890670958709]]));
-// map.on('load', () => _heightmap([[25.438246033, 57.534971414], [25.446557518390684, 57.53890670958709]]));
+map.on('load', () => _heightmap([[25.441246033, 57.537971414], [25.446557518390684, 57.53890670958709]], false));
+// map.on('load', () => _heightmap([[25.438246033, 57.534971414], [25.446557518390684, 57.53890670958709]], false));
