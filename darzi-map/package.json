@@ -21,7 +21,11 @@
     "pages-init": "bash scripts/pages-init.sh",
     "pages-pub": "bash scripts/pages-pub.sh",
     "pages-del": "bash scripts/pages-del.sh",
-    "pages": "bash scripts/pages.sh"
+    "pages": "bash scripts/pages.sh",
+    "via-init": "bash scripts/via-init.sh",
+    "via-pub": "bash scripts/via-pub.sh",
+    "via-del": "bash scripts/via-del.sh",
+    "via": "bash scripts/via.sh"
   },
   "browser": {
     "crypto": false
