@@ -340,5 +340,6 @@ limitElem.addEventListener('change', e => { _limit = e.target.valueAsNumber; });
 
 
 // test
-map.on('load', () => _heightmap([[25.441246033, 57.537971414], [25.446557518390684, 57.53890670958709]], false));
-// map.on('load', () => _heightmap([[25.438246033, 57.534971414], [25.446557518390684, 57.53890670958709]], false));
+// map.on('load', () => _heightmap([[25.4412, 57.5379], [25.4465, 57.5389]], false));
+// map.on('load', () => _heightmap([[25.4382, 57.5349], [25.4465, 57.5389]], false));
+map.on('load', () => _heightmap([[25.4280, 57.5410], [25.4290, 57.5420]], false));
