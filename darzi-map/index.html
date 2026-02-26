@@ -4,10 +4,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1.0,user-scalable=no">
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css" />
+  <link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/@watergis/maplibre-gl-terradraw/dist/maplibre-gl-terradraw.css" />
   <style>
-    @import "https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css";
-    @import "https://cdn.jsdelivr.net/npm/@watergis/maplibre-gl-terradraw/dist/maplibre-gl-terradraw.css";
-
     body,
     div {
       margin: 0;
@@ -61,6 +61,7 @@
       font-size: 12px;
     }
   </style>
+  <script type="module" src="src/index.js"></script>
 </head>
 
 <body>
@@ -75,9 +76,6 @@
       <option value="contour">Contour</option>
     </select>
   </div>
-  <script type="module">
-    import "./src/index.js";
-  </script>
 </body>
 
 </html>
