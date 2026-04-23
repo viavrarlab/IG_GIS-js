@@ -4,6 +4,7 @@ import mlcontour from 'maplibre-contour';
 import { MaplibreTerradrawControl } from '@watergis/maplibre-gl-terradraw';
 
 import { GlassShackGnomeTalk } from './protocol';
+import { test } from './test';
 
 
 
@@ -275,7 +276,7 @@ var _previousId;
 function _terradrawFinish(id, terradraw) {
   const feature = terradraw.getSnapshotFeature(id);
   if (feature.properties.mode != 'rectangle') return;
-  if (_heightmap(feature.geometry.coordinates[0])) {
+  if (_heightmap(feature.geometry.coordinates[0], false)) {
     // see https://github.com/JamesLMilner/terra-draw/issues/304
     requestAnimationFrame(() => terradraw.removeFeatures([id]));
     return;
@@ -340,6 +341,4 @@ limitElem.addEventListener('change', e => { _limit = e.target.valueAsNumber; });
 
 
 // test
-// map.on('load', () => _heightmap([[25.4412, 57.5379], [25.4465, 57.5389]], false));
-// map.on('load', () => _heightmap([[25.4382, 57.5349], [25.4465, 57.5389]], false));
-map.on('load', () => _heightmap([[25.4280, 57.5410], [25.4290, 57.5420]], false));
+test(map, _heightmap)

@@ -21,6 +21,25 @@
       height: 100%;
     }
 
+    #container {
+      height: 40%;
+      width: 90%;
+      overflow: hidden;
+      background-color: #fff;
+      display: none;
+      position: absolute;
+      bottom: 5%;
+      left: 10%;
+    }
+
+    #log {
+      height: 100%;
+      overflow-y: scroll;
+      font-size: 12px;
+      word-break: break-all;
+      overflow-wrap: anywhere;
+    }
+
     #coords {
       display: block;
       position: absolute;
@@ -67,6 +86,9 @@
 <body>
   <div id="main">
     <div id="map"></div>
+    <div id="container">
+      <div id="log"></div>
+    </div>
     <pre id="coords"></pre>
     <input id="exaggeration" type="range" min="0.5" max="10" step="0.1" value="1">
     <input id="limit" type="range" min="0" max="250000" step="1000" value="250000">
