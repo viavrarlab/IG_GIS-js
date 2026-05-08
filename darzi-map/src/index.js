@@ -4,7 +4,11 @@ import mlcontour from 'maplibre-contour';
 import { MaplibreTerradrawControl } from '@watergis/maplibre-gl-terradraw';
 
 import { GlassShackGnomeTalk } from './protocol';
-import { test } from './test';
+import { log, test } from './test';
+
+
+
+log()
 
 
 

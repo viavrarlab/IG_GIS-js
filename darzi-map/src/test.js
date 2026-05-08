@@ -1,4 +1,4 @@
-const _CAPACITY = 100;
+const _CAPACITY = 1000;
 
 class _Buffer {
     constructor(capacity) {
@@ -45,19 +45,27 @@ class _ElBuffer {
         this._buffer.push(el);
         this._container.appendChild(el);
         this._container.scrollTo(0, this._container.scrollHeight);
+        el.style.background = null;
         return el;
     }
 
-    peek() { return this._buffer.get(this._buffer.head()); }
+    peek() {
+        this._container.scrollTo(0, this._container.scrollHeight);
+        return this._buffer.get(this._buffer.head());
+    }
 
     container() { return this._container; }
 }
 
-function _new_el() { return document.createElement("div"); }
+function _new_el() {
+    const el = document.createElement("div");
+    el.style = "padding: 5px;"
+    return el;
+}
 
 const _EL_BUFFER = new _ElBuffer(_CAPACITY, _new_el, document.getElementById("log"));
 
-function _build_msg(event) {
+function _event_build_msg(event) {
     const names = [];
     for (var name in event) names.push(name);
     names.sort();
@@ -73,7 +81,7 @@ function _build_msg(event) {
     return msg;
 }
 
-function _get_buf_or_msg(event, msg) {
+function _event_get_buf_or_msg(event, msg) {
     const type = event.type;
     if (type == "pointermove" || type == "mousemove") {
         var buf_or_msg = _BUFFER.get(_BUFFER.head());
@@ -92,17 +100,37 @@ function _get_buf_or_msg(event, msg) {
     }
 }
 
-function _listener(event) {
-    const msg = _build_msg(event);
-    const buf_or_msg = _get_buf_or_msg(event, msg);
+const _MOVE_MSG = "<b>POINTERMOVE / MOUSEMOVE"
+
+function _event_listener(event) {
+    // see https://stackoverflow.com/questions/36767196/check-if-mouse-is-inside-div
+    if (_EL_BUFFER.container().matches(":hover")) return;
+    const msg = _event_build_msg(event);
+    const buf_or_msg = _event_get_buf_or_msg(event, msg);
     if (buf_or_msg instanceof _Buffer) {
         const el = _EL_BUFFER.peek();
-        if (el.innerHTML.startsWith("pointermove/mousemove")) el.innerHTML = `pointermove/mousemove ${buf_or_msg.total()} ${buf_or_msg.get(buf_or_msg.head())}`;
-        else _EL_BUFFER.next().innerHTML = `pointermove/mousemove ${buf_or_msg.total()} ${buf_or_msg.get(buf_or_msg.head())}`;
-    } else _EL_BUFFER.next().innerHTML = `${event.type} ${msg}`;
+        if (el.innerHTML.startsWith(_MOVE_MSG)) el.innerHTML = `${_MOVE_MSG} ${buf_or_msg.total()}</b> ${buf_or_msg.get(buf_or_msg.head())}`;
+        else _EL_BUFFER.next().innerHTML = `${_MOVE_MSG} ${buf_or_msg.total()}</b> ${buf_or_msg.get(buf_or_msg.head())}`;
+    } else _EL_BUFFER.next().innerHTML = `<b>${event.type.toUpperCase()}</b> ${msg}`;
 }
 
-const _events = [
+const _COLORS = {
+    "trace": "#BFB",
+    "log": "#BBB",
+    "info": "#BBF",
+    "warn": "#FFB",
+    "error": "#FBB",
+}
+
+function _console_listener(type, ...args) {
+    const msg = args.map(arg => arg.toString()).join(" ");
+    _BUFFER.push(msg);
+    const el = _EL_BUFFER.next();
+    el.innerHTML = `<b>${type.toUpperCase()}</b> ${msg}`;
+    el.style.background = _COLORS[type];
+}
+
+const _EVENTS = [
     "pointerover",
     "pointerenter",
     "pointerdown",
@@ -130,10 +158,39 @@ const _events = [
     "contextmenu",
 ];
 
-export function test(map, _heightmap) {
+export function log() {
+    _EL_BUFFER.container().parentElement.style.display = "block";
+    // see https://snippets.bentasker.co.uk/posts/javascript/intercept-console-messages-in-javascript.html
+    const trace = console.trace;
+    console.trace = function () {
+        trace.apply(console, arguments);
+        _console_listener("trace", ...arguments);
+    };
+    const log = console.log;
+    console.log = function () {
+        log.apply(console, arguments);
+        _console_listener("log", ...arguments);
+    };
+    const info = console.info;
+    console.info = function () {
+        info.apply(console, arguments);
+        _console_listener("info", ...arguments);
+    };
+    const warn = console.warn;
+    console.warn = function () {
+        warn.apply(console, arguments);
+        _console_listener("warn", ...arguments);
+    };
+    const error = console.error;
+    console.error = function () {
+        error.apply(console, arguments);
+        _console_listener("error", ...arguments);
+    };
+    for (var event_name of _EVENTS) document.addEventListener(event_name, _event_listener);
+}
+
+export function test(map, heightmap) {
     // map.on('load', () => _heightmap([[25.4412, 57.5379], [25.4465, 57.5389]], false));
     // map.on('load', () => _heightmap([[25.4382, 57.5349], [25.4465, 57.5389]], false));
     // map.on('load', () => _heightmap([[25.4280, 57.5410], [25.4290, 57.5420]], false));
-    _EL_BUFFER.container().parentElement.style.display = "block";
-    for (var event_name of _events) document.addEventListener(event_name, _listener);
 }
