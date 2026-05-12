@@ -8,8 +8,13 @@ import { log, test } from "./test";
 
 
 
+// dev
+const dev = new URLSearchParams(location.search).get("dev");
+
+
+
 // log
-log()
+if (dev) log()
 
 
 
@@ -346,4 +351,4 @@ limitElem.addEventListener("change", e => { _limit = e.target.valueAsNumber; });
 
 
 // test
-test(map)
+if (dev) test(map)
