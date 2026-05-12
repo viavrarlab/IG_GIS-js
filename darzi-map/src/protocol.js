@@ -1,4 +1,6 @@
 export class GlassShackGnomeTalk {
+    _ORIGIN = window.location.origin + window.location.pathname;
+
     _chunk_size = 1 << 13;
     _chunk_timeout = 50;
     _queue = [];
@@ -90,7 +92,7 @@ export class GlassShackGnomeTalk {
     }
 
     _send_chunk() {
-        window.history.replaceState(null, null, `${window.location.origin}/GSGT/${this._chunk}/${this._chunks}/${this._msg.slice(this._chunk * this._chunk_size, this._chunk * this._chunk_size + this._chunk_size)}`);
+        window.history.replaceState(null, null, `${this._ORIGIN}/GSGT/${this._chunk}/${this._chunks}/${this._msg.slice(this._chunk * this._chunk_size, this._chunk * this._chunk_size + this._chunk_size)}`);
         if (this._chunk < this._chunks) {
             this._chunk++;
             setTimeout(this._send_chunk.bind(this), this._chunk_timeout);
