@@ -123,7 +123,7 @@ const _COLORS = {
 }
 
 function _console_listener(type, ...args) {
-    const msg = args.map(arg => arg.toString()).join(" ");
+    const msg = args.map(arg => arg && arg.toString()).join(" ");
     _BUFFER.push(msg);
     const el = _EL_BUFFER.next();
     el.innerHTML = `<b>${type.toUpperCase()}</b> ${msg}`;
@@ -189,8 +189,10 @@ export function log() {
     for (var event_name of _EVENTS) document.addEventListener(event_name, _event_listener);
 }
 
-export function test(map, heightmap) {
-    // map.on('load', () => _heightmap([[25.4412, 57.5379], [25.4465, 57.5389]], false));
-    // map.on('load', () => _heightmap([[25.4382, 57.5349], [25.4465, 57.5389]], false));
-    // map.on('load', () => _heightmap([[25.4280, 57.5410], [25.4290, 57.5420]], false));
+export function test(map) {
+    map.on("load", () => {
+        window.gsgt.mouse_event("click", 30, 30, 0);
+        window.gsgt.mouse_event("click", 100, 100, 0);
+        window.gsgt.mouse_event("click", 110, 110, 0);
+    });
 }
