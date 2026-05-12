@@ -130,6 +130,19 @@ function _console_listener(type, ...args) {
     el.style.background = _COLORS[type];
 }
 
+function _error_listener(event) {
+    console.error(`Error: message=${event.message} filename=${event.filename} lineno=${event.lineno} colno=${event.colno}`);
+    console.error(event.error);
+    event.stopImmediatePropagation();
+    event.preventDefault();
+}
+
+function _rejection_listener(event) {
+    console.error(`Unhandled rejection: reason=${event.reason}`);
+    event.stopImmediatePropagation();
+    event.preventDefault();
+}
+
 const _EVENTS = [
     "pointerover",
     "pointerenter",
@@ -187,6 +200,8 @@ export function log() {
         _console_listener("error", ...arguments);
     };
     for (var event_name of _EVENTS) document.addEventListener(event_name, _event_listener);
+    window.addEventListener("error", _error_listener);
+    window.addEventListener("unhandledrejection", _rejection_listener);
 }
 
 export function test(map) {
