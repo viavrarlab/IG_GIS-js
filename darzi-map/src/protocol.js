@@ -49,7 +49,7 @@ export class GlassShackGnomeTalk {
             }
             if (!pointer) this._mouse_target = el;
         }
-        const e = new MouseEvent(type, {
+        (target || el).dispatchEvent(new PointerEvent(type, {
             bubbles: true,
             cancelable: true,
             composed: true,
@@ -68,9 +68,19 @@ export class GlassShackGnomeTalk {
             buttons: { 0: 1, 1: 4, 2: 2 }[button] || 0,
             relatedTarget: relatedTarget,
             region: null,
-        });
-        e.isPrimary = true;
-        (target || el).dispatchEvent(e);
+            pointerId: 0,
+            width: 1,
+            height: 1,
+            pressure: 0,
+            tangentialPressure: 0,
+            altitudeAngle: 1.5707963267948966,
+            azimuthAngle: 0,
+            tiltX: 0,
+            tiltY: 0,
+            twist: 0,
+            pointerType: "mouse",
+            isPrimary: true,
+        }));
         if (init) this._mouse_event_init();
     }
 
