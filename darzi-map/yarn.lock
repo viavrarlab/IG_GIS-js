@@ -3626,6 +3626,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"core-js@npm:^3.49.0":
+  version: 3.49.0
+  resolution: "core-js@npm:3.49.0"
+  checksum: 10c0/2e42edb47eda38fd5368380131623c8aa5d4a6b42164125b17744bdc08fa5ebbbdd06b4b4aa6ca3663470a560b0f2fba48e18f142dfe264b0039df85bc625694
+  languageName: node
+  linkType: hard
+
 "cross-env@npm:^10.1.0":
   version: 10.1.0
   resolution: "cross-env@npm:10.1.0"
@@ -3664,6 +3671,7 @@ __metadata:
     babel-preset-env: "npm:^1.7.0"
     baseline-browser-mapping: "npm:^2.9.12"
     clang-format: "npm:^1.8.0"
+    core-js: "npm:^3.49.0"
     cross-env: "npm:^10.1.0"
     eslint: "npm:^9.38.0"
     eslint-config-google: "npm:^0.14.0"

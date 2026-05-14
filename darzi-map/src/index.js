@@ -1,3 +1,4 @@
+import "core-js/actual";
 import maplibregl from "maplibre-gl";
 import { Map, NavigationControl, GeolocateControl, GlobeControl, TerrainControl, LngLat, MercatorCoordinate } from "maplibre-gl";
 import mlcontour from "maplibre-contour";
@@ -352,6 +353,6 @@ limitElem.addEventListener("change", e => { _limit = e.target.valueAsNumber; });
 
 // test
 if (dev) {
-  dump("map", map);
+  dump("map", map, false, false);
   test(map);
 }

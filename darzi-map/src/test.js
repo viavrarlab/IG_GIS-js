@@ -218,11 +218,11 @@ function _array_types(obj) {
     return types;
 }
 
-export function dump(name, obj, str_id = "└0", depth = 0, len = 0, lines = 0, log = console.log, seen = undefined) {
-    const str_lines = (lines++).toString().padStart(7, " ");
-    const str_depth = depth.toString().padStart(5, " ") + " ".repeat(depth);
-    const str_name = name.padStart(len, " ");
-    const str = `${str_lines} ${str_depth} ${str_id} ${str_name} = `;
+export function dump(name, obj, numbers = true, align = true, str_id = "└0", depth = 0, len = 0, lines = 0, log = console.log, seen = undefined) {
+    const str_lines = numbers ? (lines++).toString().padStart(7, " ") + " " : "";
+    const str_depth = (numbers ? depth.toString().padStart(5, " ") + " " : "") + " ".repeat(depth);
+    const str_name = align ? name.padStart(len, " ") : name;
+    const str = `${str_lines}${str_depth}${numbers ? str_id + " " : ""}${str_name} = `;
     if (obj === null) { log(`${str}{null}`); return lines; }
     if (obj === undefined) { log(`${str}{undefined}`); return lines; }
     const str_obj = obj.toString().slice(0, 1000).replace(/\s+/g, " ");
@@ -248,7 +248,7 @@ export function dump(name, obj, str_id = "└0", depth = 0, len = 0, lines = 0, 
     const max_name_len = names.length ? Math.max(...names.map(name => name.length)) : 0;
     const max_names_id = names.length - 1;
     const max_names_id_len = max_names_id.toString().length;
-    for (const [id, name] of names.entries()) lines = dump(name.toString(), obj[name], (id == max_names_id ? "└" : "├") + id.toString().padStart(max_names_id_len, " "), depth + 1, max_name_len, lines, log, seen);
+    for (const [id, name] of names.entries()) lines = dump(name.toString(), obj[name], numbers, align, (id == max_names_id ? "└" : "├") + id.toString().padStart(max_names_id_len, " "), depth + 1, max_name_len, lines, log, seen);
     return lines;
 }
 
