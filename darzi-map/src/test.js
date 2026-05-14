@@ -67,10 +67,10 @@ const _EL_BUFFER = new _ElBuffer(_CAPACITY, _new_el, document.getElementById("lo
 
 function _event_build_msg(event) {
     const names = [];
-    for (var name in event) names.push(name);
+    for (const name in event) names.push(name);
     names.sort();
     var msg = "";
-    for (var name of names) {
+    for (const name of names) {
         var value = event[name];
         if (value) {
             var value_name = value["name"];
@@ -202,6 +202,54 @@ export function log() {
     for (var event_name of _EVENTS) document.addEventListener(event_name, _event_listener);
     window.addEventListener("error", _error_listener);
     window.addEventListener("unhandledrejection", _rejection_listener);
+}
+
+const _TypedArray = Object.getPrototypeOf(Int8Array);
+const _PRIMITIVE_TYPES = new Set(["{null}", "{undefined}", "String", "Number", "Boolean"]);
+
+function _array_types(obj) {
+    const types = new Set();
+    for (const value of obj) {
+        if (value === null) types.add("{null}");
+        else if (value === undefined) types.add("{undefined}");
+        else if (value instanceof Array) _array_types(value).forEach(type => types.add(type));
+        else types.add(value.constructor.name || typeof value);
+    }
+    return types;
+}
+
+export function dump(name, obj, str_id = "└0", depth = 0, len = 0, lines = 0, log = console.log, seen = undefined) {
+    const str_lines = (lines++).toString().padStart(7, " ");
+    const str_depth = depth.toString().padStart(5, " ") + " ".repeat(depth);
+    const str_name = name.padStart(len, " ");
+    const str = `${str_lines} ${str_depth} ${str_id} ${str_name} = `;
+    if (obj === null) { log(`${str}{null}`); return lines; }
+    if (obj === undefined) { log(`${str}{undefined}`); return lines; }
+    const str_obj = obj.toString().slice(0, 1000).replace(/\s+/g, " ");
+    if (obj instanceof String || typeof obj === "string") { log(`${str}"${str_obj}"`); return lines; }
+    if (obj instanceof Number || typeof obj === "number") { log(`${str}${str_obj}`); return lines; }
+    if (obj instanceof Boolean || typeof obj === "boolean") { log(`${str}${str_obj}`); return lines; }
+    if (obj instanceof Function || typeof obj === "function") { log(`${str}${str_obj}`); return lines; }
+    if (obj instanceof Node) { log(`${str}${str_obj}`); return lines; }
+    const str_length = obj instanceof _TypedArray || obj instanceof Array ? `[${obj.length}]` : "";
+    const str_type = `(${obj.constructor.name || typeof obj})${str_length} `;
+    const str_type_obj = `${str}${str_type}${str_obj}`;
+    if (obj instanceof _TypedArray) { log(str_type_obj); return lines; }
+    if (obj instanceof Array && _array_types(obj).difference(_PRIMITIVE_TYPES).size == 0) { log(str_type_obj); return lines; }
+    if (seen === undefined) seen = new Set();
+    if (seen.has(obj)) { log(`${str_type_obj} ...`); return lines; }
+    seen.add(obj);
+    log(str_type_obj);
+    const names = [];
+    if (obj instanceof Array) names.push(...obj.keys());
+    else for (const name in obj) names.push(name);
+    names.sort();
+    if (names.length > 1000) throw new Error(names.length.toString());
+    const max_name_len = names.length ? Math.max(...names.map(name => name.length)) : 0;
+    const max_names_id = names.length - 1;
+    const max_names_id_len = max_names_id.toString().length;
+    for (const [id, name] of names.entries()) lines = dump(name.toString(), obj[name], (id == max_names_id ? "└" : "├") + id.toString().padStart(max_names_id_len, " "), depth + 1, max_name_len, lines, log, seen);
+    return lines;
 }
 
 export function test(map) {

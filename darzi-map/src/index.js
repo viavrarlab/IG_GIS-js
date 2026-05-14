@@ -4,7 +4,7 @@ import mlcontour from "maplibre-contour";
 import { MaplibreTerradrawControl } from "@watergis/maplibre-gl-terradraw";
 
 import { GlassShackGnomeTalk } from "./protocol";
-import { log, test } from "./test";
+import { log, dump, test } from "./test";
 
 
 
@@ -14,7 +14,7 @@ const dev = new URLSearchParams(location.search).get("dev");
 
 
 // log
-if (dev) log()
+if (dev) log();
 
 
 
@@ -351,4 +351,7 @@ limitElem.addEventListener("change", e => { _limit = e.target.valueAsNumber; });
 
 
 // test
-if (dev) test(map)
+if (dev) {
+  dump("map", map);
+  test(map);
+}
