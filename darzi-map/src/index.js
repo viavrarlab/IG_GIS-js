@@ -332,6 +332,8 @@ function _draw(lngLat) {
   });
   return coords;
 }
+window.gsgt = new GlassShackGnomeTalk();
+window.gsgt.preInit();
 map.on("load", () => {
   map.on("click", e => {
     const lngLat = e.lngLat.wrap();
@@ -343,10 +345,8 @@ map.on("load", () => {
     _previousLngLat = undefined;
   });
   map.on("mousemove", e => { _draw(e.lngLat.wrap()); });
+  window.gsgt.init();
 });
-window.gsgt = new GlassShackGnomeTalk();
-window.gsgt.preInit();
-window.gsgt.init();
 
 
 
