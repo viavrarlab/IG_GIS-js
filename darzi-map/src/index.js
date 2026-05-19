@@ -2,10 +2,9 @@ import "core-js/actual";
 import maplibregl from "maplibre-gl";
 import { Map, NavigationControl, GeolocateControl, GlobeControl, TerrainControl, LngLat, MercatorCoordinate } from "maplibre-gl";
 import mlcontour from "maplibre-contour";
-import { MaplibreTerradrawControl } from "@watergis/maplibre-gl-terradraw";
 
 import { GlassShackGnomeTalk } from "./protocol";
-import { log, dump, test } from "./test";
+import { log, test } from "./test";
 
 
 
@@ -56,6 +55,34 @@ const terrainDEM = {
 
 
 
+// data
+const sourceData = {
+  type: "geojson",
+  data: {},
+}
+const layerFill = {
+  id: "data-fill",
+  type: "fill",
+  source: "data",
+  paint: {
+    "fill-opacity": .5,
+    "fill-color": ["get", "fill"],
+    "fill-outline-color": ["get", "line"],
+  },
+}
+const layerLine = {
+  id: "data-line",
+  type: "line",
+  source: "data",
+  paint: {
+    "line-opacity": .75,
+    "line-color": ["get", "line"],
+    "line-width": 5,
+  },
+}
+
+
+
 // styles
 const styleOSM = {
   version: 8,
@@ -73,13 +100,14 @@ const styleOSM = {
       attribution: "&copy; OpenStreetMap Contributors",
       maxzoom: configMaxZoom,
     },
+    data: sourceData,
   },
   layers: [
     {
       id: "osm",
       type: "raster",
       source: "osm",
-    },
+    }, layerFill, layerLine,
   ],
 };
 const styleMapzen = {
@@ -94,13 +122,14 @@ const styleMapzen = {
       attribution: "&copy; Mapzen",
       maxzoom: configMaxZoomMapzen,
     },
+    data: sourceData,
   },
   layers: [
     {
       id: "mapzen",
       type: "raster",
       source: "mapzen",
-    },
+    }, layerFill, layerLine,
   ],
 };
 const styleContour = {
@@ -126,6 +155,7 @@ const styleContour = {
       })],
       maxzoom: configMaxZoomMapzen,
     },
+    data: sourceData,
   },
   layers: [
     {
@@ -172,7 +202,7 @@ const styleContour = {
         "text-field": ["number-format", ["get", "elevation"], {}],
         "text-font": ["Noto Sans Bold"],
       },
-    },
+    }, layerFill, layerLine,
   ],
 };
 
@@ -213,11 +243,6 @@ map.addControl(new GeolocateControl({
 }));
 map.addControl(new GlobeControl());
 map.addControl(new TerrainControl(terrainDEM));
-const terradrawControl = new MaplibreTerradrawControl({
-  modes: ["rectangle", "select", "delete-selection", "delete"],
-  open: true,
-});
-map.addControl(terradrawControl, "top-left");
 
 
 
@@ -283,56 +308,51 @@ function _heightmap(coords, interactive = true) {
   }
   window.gsgt.heightmap(lng_min, lng_min + (x_index.length - 1) * lng_meter, lat_min, lat_min + (y_index.length - 1) * lat_meter, x_index.length, y_index.length, eles);
 }
-var _previousId;
-function _terradrawFinish(id, terradraw) {
-  const feature = terradraw.getSnapshotFeature(id);
-  if (feature.properties.mode != "rectangle") return;
-  if (_heightmap(feature.geometry.coordinates[0], false)) {
-    // see https://github.com/JamesLMilner/terra-draw/issues/304
-    requestAnimationFrame(() => terradraw.removeFeatures([id]));
-    return;
-  }
-  if (_previousId) terradraw.removeFeatures([_previousId]);
-  _previousId = id;
-}
-var _overLimitId;
-function _terradrawChange(id, type, terradraw) {
-  if (type != "update") return;
-  const feature = terradraw.getSnapshotFeature(id);
-  if (feature.properties.mode != "rectangle") return;
-  const area = _area(feature.geometry.coordinates[0]).at(-1);
-  _overLimitId = area > _limit ? id : undefined;
-}
-function _terradrawReady(terradraw) {
-  terradraw.updateModeOptions("rectangle", {
-    styles: {
-      fillColor: ({ id }) => id == _overLimitId ? "#FF0000" : "#3f97e0",
-      outlineColor: ({ id }) => id == _overLimitId ? "#FF0000" : "#3f97e0",
-    }
+var _previousLngLat;
+function _draw(lngLat) {
+  if (!_previousLngLat) return;
+  const coords = [
+    [_previousLngLat.lng, _previousLngLat.lat],
+    [_previousLngLat.lng, lngLat.lat],
+    [lngLat.lng, lngLat.lat],
+    [lngLat.lng, _previousLngLat.lat],
+    [_previousLngLat.lng, _previousLngLat.lat],
+  ];
+  const red = _area(coords).at(-1) > _limit;
+  map.getSource("data").setData({
+    type: "Feature",
+    geometry: {
+      type: "Polygon",
+      coordinates: [coords],
+    },
+    properties: {
+      fill: red ? "#F00" : "#00F",
+      line: red ? "#A00" : "#00A",
+    },
   });
+  return coords;
 }
-function _terradrawInit(layer) {
-  const terradraw = terradrawControl.getTerraDrawInstance();
-  terradraw.on("ready", () => _terradrawReady(terradraw));
-  terradraw.on("change", (id, type) => _terradrawChange(id, type, terradraw));
-  terradraw.on("finish", id => _terradrawFinish(id, terradraw));
-  window.gsgt.layer(layer);
-}
+map.on("load", () => {
+  map.on("click", e => {
+    const lngLat = e.lngLat.wrap();
+    if (!_previousLngLat) {
+      _previousLngLat = lngLat;
+      return;
+    };
+    _heightmap(_draw(lngLat), false);
+    _previousLngLat = undefined;
+  });
+  map.on("mousemove", e => { _draw(e.lngLat.wrap()); });
+});
 window.gsgt = new GlassShackGnomeTalk();
 window.gsgt.preInit();
-_terradrawInit(configDefaultStyle);
 window.gsgt.init();
 
 
 
 // layers
 const layersElem = document.getElementById("layers");
-layersElem.addEventListener("change", e => {
-  map.removeControl(terradrawControl);
-  map.setStyle(configStyles[e.target.value]);
-  map.addControl(terradrawControl, "top-left");
-  _terradrawInit(e.target.value);
-});
+layersElem.addEventListener("change", e => { map.setStyle(configStyles[e.target.value]); });
 
 
 
@@ -352,7 +372,4 @@ limitElem.addEventListener("change", e => { _limit = e.target.valueAsNumber; });
 
 
 // test
-if (dev) {
-  dump("map", map, false, false);
-  test(map);
-}
+if (dev) test(map);

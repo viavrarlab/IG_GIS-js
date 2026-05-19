@@ -254,7 +254,6 @@ export function dump(name, obj, numbers = true, align = true, str_id = "└0", d
 
 export function test(map) {
     map.on("load", () => {
-        window.gsgt.mouse_event("click", 30, 30, 0);
         window.gsgt.mouse_event("click", 100, 100, 0);
         window.gsgt.mouse_event("click", 200, 200, 0);
     });

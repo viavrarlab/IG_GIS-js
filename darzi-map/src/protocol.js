@@ -118,7 +118,6 @@ export class GlassShackGnomeTalk {
     }
 
     _send(msg) {
-        // console.log(msg);
         this._queue.push(msg);
         if (!this._msg) this._send_init();
     }

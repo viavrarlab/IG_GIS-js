@@ -9,12 +9,9 @@
     "node": ">=8.9.0"
   },
   "dependencies": {
-    "@watergis/maplibre-gl-terradraw": "^1.9.4",
     "core-js": "^3.49.0",
     "maplibre-contour": "^0.1.0",
-    "maplibre-gl": "^5.10.0",
-    "terra-draw": "^1.18.1",
-    "terra-draw-maplibre-gl-adapter": "^1.2.2"
+    "maplibre-gl": "^5.24.0"
   },
   "scripts": {
     "parcel-start": "bash scripts/parcel-start.sh",
@@ -32,22 +29,23 @@
     "crypto": false
   },
   "devDependencies": {
-    "@babel/core": "^7.28.5",
-    "@babel/plugin-transform-runtime": "^7.28.5",
-    "@babel/preset-env": "^7.28.5",
-    "@babel/runtime": "^7.28.4",
-    "@parcel/transformer-inline-string": "2.16.3",
+    "@babel/core": "^7.29.0",
+    "@babel/plugin-transform-runtime": "^7.29.0",
+    "@babel/preset-env": "^7.29.5",
+    "@babel/runtime": "^7.29.2",
+    "@parcel/transformer-inline-string": "2.16.4",
     "babel-plugin-external-helpers": "^6.22.0",
     "babel-preset-env": "^1.7.0",
-    "baseline-browser-mapping": "^2.9.12",
+    "baseline-browser-mapping": "^2.10.31",
     "clang-format": "^1.8.0",
     "cross-env": "^10.1.0",
-    "eslint": "^9.38.0",
+    "eslint": "^10.4.0",
     "eslint-config-google": "^0.14.0",
-    "parcel": "^2.16.0",
+    "npm-check-updates": "^22.2.0",
+    "parcel": "^2.16.4",
     "parcel-reporter-static-files-copy": "^1.5.3",
     "yalc": "^1.0.0-pre.53",
-    "yarn-upgrade-all": "^0.7.5"
+    "yarn-upgrade-all": "^0.8.1"
   },
   "resolutions": {
     "is-svg": "4.3.1"
